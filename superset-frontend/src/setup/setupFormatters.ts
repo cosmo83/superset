@@ -24,10 +24,8 @@ import {
   getTimeFormatterRegistry,
   smartDateFormatter,
   smartDateVerboseFormatter,
+  createD3NumberFormatter
 } from '@superset-ui/core';
-import {
-   createD3NumberFormatter
-} from '@superset-ui/number-format';
 
 export default function setupFormatters() {
   getNumberFormatterRegistry()
