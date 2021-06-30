@@ -47,7 +47,7 @@ let changeNumberFormat = function (num: number, currency?: boolean, decimals?: n
         const crores = roundOf(noOfLakhs / 100);
         const crorePrefix = crores >= 100000 ? changeNumberFormat(crores, currency, decimals, true) : crores;
         isPlural = crores > 1 && !recursiveCall;
-        displayStr = `${currency ? '₹ ' : ''}'${crorePrefix} Crore${isPlural ? 's' : ''}`;
+        displayStr = `${currency ? '₹ ' : ''}${crorePrefix} Crore${isPlural ? 's' : ''}`;
     } else {
         displayStr = roundOf(+num).toString();
     }
