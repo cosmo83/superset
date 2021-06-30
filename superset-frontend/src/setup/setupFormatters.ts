@@ -24,11 +24,10 @@ import {
   getTimeFormatterRegistry,
   smartDateFormatter,
   smartDateVerboseFormatter,
-  createD3NumberFormatter,
   NumberFormatter
 } from '@superset-ui/core';
 
-let changeNumberFormat = function (num: number, decimals?: number, recursiveCall?: boolean): string {
+let changeNumberFormat = function (num: number, currency?: boolean, decimals?: number, recursiveCall?: boolean): string {
     const decimalPoints: number = decimals || 2;
     const noOfLakhs: number = num / 100000;
     let displayStr: string;
@@ -46,9 +45,9 @@ let changeNumberFormat = function (num: number, decimals?: number, recursiveCall
         displayStr = `${lakhs} Lakh${isPlural ? 's' : ''}`;
     } else if (noOfLakhs >= 100) {
         const crores = roundOf(noOfLakhs / 100);
-        const crorePrefix = crores >= 100000 ? changeNumberFormat(crores, decimals, true) : crores;
+        const crorePrefix = crores >= 100000 ? changeNumberFormat(crores, currency, decimals, true) : crores;
         isPlural = crores > 1 && !recursiveCall;
-        displayStr = `${crorePrefix} Crore${isPlural ? 's' : ''}`;
+        displayStr = `${currency ? '₹ ' : ''}'${crorePrefix} Crore${isPlural ? 's' : ''}`;
     } else {
         displayStr = roundOf(+num).toString();
     }
@@ -98,20 +97,13 @@ export default function setupFormatters() {
       'DURATION_SUB',
       createDurationFormatter({ formatSubMilliseconds: true }),
     )
-    .registerValue(
-      'CURRENCY_INDIA',
-       createD3NumberFormatter({
-         locale: {
-           decimal: '.',
-           thousands: ',',
-           grouping: [3, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-           currency: ['₹', ''],
-       },
-         formatString: '$,.2f',
-   }))
    .registerValue("NUMBER_INDIA", new NumberFormatter({
        'id': 'NUMBER_INDIA',
        formatFunc: v =>  changeNumberFormat(v)
+    }))
+   .registerValue("CURRENCY_INDIA", new NumberFormatter({
+       'id': 'CURRENCY_INDIA',
+       formatFunc: v =>  changeNumberFormat(v,true)
     }));
          
 
