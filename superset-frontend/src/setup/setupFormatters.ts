@@ -24,8 +24,38 @@ import {
   getTimeFormatterRegistry,
   smartDateFormatter,
   smartDateVerboseFormatter,
-  createD3NumberFormatter
+  createD3NumberFormatter,
+  NumberFormatter
 } from '@superset-ui/core';
+
+let changeNumberFormat = function (num: number, decimals?: number, recursiveCall?: boolean): string {
+    const decimalPoints: number = decimals || 2;
+    const noOfLakhs: number = num / 100000;
+    let displayStr: string;
+    let isPlural: boolean;
+
+
+    let roundOf = function (num: number): number {
+          return  parseFloat(num.toFixed(decimalPoints));
+   }
+
+
+    if (noOfLakhs >= 1 && noOfLakhs <= 99) {
+        const lakhs: number = roundOf(noOfLakhs);
+        isPlural = lakhs > 1 && !recursiveCall;
+        displayStr = `${lakhs} Lakh${isPlural ? 's' : ''}`;
+    } else if (noOfLakhs >= 100) {
+        const crores = roundOf(noOfLakhs / 100);
+        const crorePrefix = crores >= 100000 ? changeNumberFormat(crores, decimals, true) : crores;
+        isPlural = crores > 1 && !recursiveCall;
+        displayStr = `${crorePrefix} Crore${isPlural ? 's' : ''}`;
+    } else {
+        displayStr = roundOf(+num).toString();
+    }
+
+    return displayStr;
+}
+
 
 export default function setupFormatters() {
   getNumberFormatterRegistry()
@@ -78,7 +108,12 @@ export default function setupFormatters() {
            currency: ['₹', ''],
        },
          formatString: '$,.2f',
-   }));
+   }))
+   .registerValue("NUMBER_INDIA", new NumberFormatter({
+       'id': 'NUMBER_INDIA',
+       formatFunc: v =>  changeNumberFormat(v)
+    }));
+         
 
   getTimeFormatterRegistry()
     .registerValue('smart_date', smartDateFormatter)
