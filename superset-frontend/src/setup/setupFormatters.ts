@@ -42,12 +42,12 @@ let changeNumberFormat = function (num: number, currency?: boolean, decimals?: n
     if (noOfLakhs >= 1 && noOfLakhs <= 99) {
         const lakhs: number = roundOf(noOfLakhs);
         isPlural = lakhs > 1 && !recursiveCall;
-        displayStr = `${lakhs} Lakh${isPlural ? 's' : ''}`;
+        displayStr = `${lakhs} Lac${isPlural ? 's' : ''}`;
     } else if (noOfLakhs >= 100) {
         const crores = roundOf(noOfLakhs / 100);
         const crorePrefix = crores >= 100000 ? changeNumberFormat(crores, currency, decimals, true) : crores;
         isPlural = crores > 1 && !recursiveCall;
-        displayStr = `${currency ? '₹ ' : ''}${crorePrefix} Crore${isPlural ? 's' : ''}`;
+        displayStr = `${currency ? '₹ ' : ''}${crorePrefix} Cr${isPlural ? 's' : ''}`;
     } else {
         displayStr = roundOf(+num).toString();
     }
