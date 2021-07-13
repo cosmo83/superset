@@ -468,9 +468,10 @@ const DatabaseModal: FunctionComponent<DatabaseModalProps> = ({
         engine_params: JSON.parse(
           (dbToUpdate?.extra_json?.engine_params as string) || '{}',
         ),
-        schemas_allowed_for_csv_upload:
+        schemas_allowed_for_csv_upload: JSON.parse(
           (dbToUpdate?.extra_json?.schemas_allowed_for_csv_upload as string) ||
-          '[]',
+            '[]',
+        ),
       });
     }
 
@@ -532,16 +533,16 @@ const DatabaseModal: FunctionComponent<DatabaseModalProps> = ({
     }
   };
 
-  const setDatabaseModel = (engine: string) => {
+  const setDatabaseModel = (database_name: string) => {
     const selectedDbModel = availableDbs?.databases.filter(
-      (db: DatabaseObject) => db.engine === engine,
+      (db: DatabaseObject) => db.name === database_name,
     )[0];
-    const { name, parameters } = selectedDbModel;
+    const { engine, parameters } = selectedDbModel;
     const isDynamic = parameters !== undefined;
     setDB({
       type: ActionType.dbSelected,
       payload: {
-        database_name: name,
+        database_name,
         configuration_method: isDynamic
           ? CONFIGURATION_METHOD.DYNAMIC_FORM
           : CONFIGURATION_METHOD.SQLALCHEMY_URI,
@@ -566,7 +567,7 @@ const DatabaseModal: FunctionComponent<DatabaseModalProps> = ({
             a.name.localeCompare(b.name),
           )
           .map((database: DatabaseForm) => (
-            <Select.Option value={database.engine} key={database.engine}>
+            <Select.Option value={database.name} key={database.name}>
               {database.name}
             </Select.Option>
           ))}
@@ -620,7 +621,7 @@ const DatabaseModal: FunctionComponent<DatabaseModalProps> = ({
         .map((database: DatabaseForm) => (
           <IconButton
             className="preferred-item"
-            onClick={() => setDatabaseModel(database.engine)}
+            onClick={() => setDatabaseModel(database.name)}
             buttonText={database.name}
             icon={dbImages?.[database.engine]}
           />
