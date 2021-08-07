@@ -145,7 +145,6 @@ class ChartEntityResponseSchema(Schema):
     cache_timeout = fields.Integer(description=cache_timeout_description)
     changed_on = fields.String(description=changed_on_description)
     modified = fields.String()
-    datasource = fields.String(description=datasource_name_description)
     description = fields.String(description=description_description)
     description_markeddown = fields.String(
         description=description_markeddown_description
@@ -1205,7 +1204,7 @@ class ImportV1ChartSchema(Schema):
     slice_name = fields.String(required=True)
     viz_type = fields.String(required=True)
     params = fields.Dict()
-    query_context = fields.Dict()
+    query_context = fields.String(allow_none=True, validate=utils.validate_json)
     cache_timeout = fields.Integer(allow_none=True)
     uuid = fields.UUID(required=True)
     version = fields.String(required=True)
