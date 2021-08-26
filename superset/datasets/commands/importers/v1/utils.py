@@ -14,8 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-# pylint: disable=too-many-branches
-
 import gzip
 import json
 import logging
@@ -135,8 +133,7 @@ def import_dataset(
 def load_data(
     data_uri: str, dataset: SqlaTable, example_database: Database, session: Session
 ) -> None:
-
-    data = request.urlopen(data_uri)
+    data = request.urlopen(data_uri)  # pylint: disable=consider-using-with
     if data_uri.endswith(".gz"):
         data = gzip.open(data)
     df = pd.read_csv(data, encoding="utf-8")
