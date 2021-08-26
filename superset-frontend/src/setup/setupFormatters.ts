@@ -27,17 +27,16 @@ import {
   NumberFormatter
 } from '@superset-ui/core';
 
-let changeNumberFormat = function (num: number, currency?: boolean, decimals?: number, recursiveCall?: boolean): string {
+let changeNumberFormat = function (val: number, currency?: boolean, decimals?: number, recursiveCall?: boolean): string {
     const decimalPoints: number = decimals || 2;
+    const isNegative: boolean = (val < 0 ? true : false);
+    var num = Math.abs(val);
     const noOfLakhs: number = num / 100000;
     let displayStr: string;
     let isPlural: boolean;
-
-
     let roundOf = function (num: number): number {
           return  parseFloat(num.toFixed(decimalPoints));
    }
-
 
     if (noOfLakhs >= 1 && noOfLakhs <= 99) {
         const lakhs: number = roundOf(noOfLakhs);
@@ -52,6 +51,9 @@ let changeNumberFormat = function (num: number, currency?: boolean, decimals?: n
         displayStr = roundOf(+num).toString();
     }
 
+    if(isNegative){
+      return "-" + displayStr;
+    }
     return displayStr;
 }
 
