@@ -47,7 +47,6 @@ type PickedSelectProps = Pick<
   AntdSelectAllProps,
   | 'allowClear'
   | 'autoFocus'
-  | 'value'
   | 'disabled'
   | 'filterOption'
   | 'notFoundContent'
@@ -87,9 +86,12 @@ const StyledContainer = styled.div`
   flex-direction: column;
 `;
 
-const StyledSelect = styled(AntdSelect)`
-  ${({ theme }) => `
+const StyledSelect = styled(AntdSelect, {
+  shouldForwardProp: prop => prop !== 'hasHeader',
+})<{ hasHeader: boolean }>`
+  ${({ theme, hasHeader }) => `
     width: 100%;
+    margin-top: ${hasHeader ? theme.gridUnit : 0}px;
 
     && .ant-select-selector {
       border-radius: ${theme.gridUnit}px;
@@ -135,6 +137,13 @@ const StyledSpin = styled(Spin)`
   margin-top: ${({ theme }) => -theme.gridUnit}px;
 `;
 
+const StyledLoadingText = styled.span`
+  ${({ theme }) => `
+    margin-left: ${theme.gridUnit * 3}px;
+    color: ${theme.colors.grayscale.light1};
+  `}
+`;
+
 const MAX_TAG_COUNT = 4;
 const TOKEN_SEPARATORS = [',', '\n', '\t', ';'];
 const DEBOUNCE_TIMEOUT = 500;
@@ -173,7 +182,8 @@ const Select = ({
   );
   const [selectValue, setSelectValue] = useState(value);
   const [searchedValue, setSearchedValue] = useState('');
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState('');
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [page, setPage] = useState(0);
@@ -187,7 +197,6 @@ const Select = ({
     : 'multiple';
 
   useEffect(() => {
-    fetchedQueries.current.clear();
     setSelectOptions(
       options && Array.isArray(options) ? options : EMPTY_OPTIONS,
     );
@@ -349,9 +358,10 @@ const Select = ({
       const cachedCount = fetchedQueries.current.get(key);
       if (cachedCount) {
         setTotalCount(cachedCount);
+        setIsTyping(false);
         return;
       }
-      setLoading(true);
+      setIsLoading(true);
       const fetchOptions = options as OptionsPagePromise;
       fetchOptions(value, page, pageSize)
         .then(({ data, totalCount }: OptionsTypePage) => {
@@ -360,7 +370,10 @@ const Select = ({
           setTotalCount(totalCount);
         })
         .catch(onError)
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setIsLoading(false);
+          setIsTyping(false);
+        });
     },
     [options],
   );
@@ -395,6 +408,9 @@ const Select = ({
           }
         }
         setSearchedValue(searchValue);
+        if (!searchValue) {
+          setIsTyping(false);
+        }
       }, DEBOUNCE_TIMEOUT),
     [
       allowNewOptions,
@@ -479,7 +495,16 @@ const Select = ({
     if (!isDropdownVisible) {
       originNode.ref?.current?.scrollTo({ top: 0 });
     }
+    if ((isLoading && selectOptions.length === 0) || isTyping) {
+      return <StyledLoadingText>{t('Loading...')}</StyledLoadingText>;
+    }
     return error ? <Error error={error} /> : originNode;
+  };
+
+  const onInputKeyDown = () => {
+    if (isAsync && !isTyping) {
+      setIsTyping(true);
+    }
   };
 
   const SuffixIcon = () => {
@@ -496,6 +521,7 @@ const Select = ({
     <StyledContainer>
       {header}
       <StyledSelect
+        hasHeader={!!header}
         aria-label={ariaLabel || name}
         dropdownRender={dropdownRender}
         filterOption={handleFilterOption}
@@ -505,6 +531,7 @@ const Select = ({
         mode={mappedMode}
         onDeselect={handleOnDeselect}
         onDropdownVisibleChange={handleOnDropdownVisibleChange}
+        onInputKeyDown={onInputKeyDown}
         onPopupScroll={isAsync ? handlePagination : undefined}
         onSearch={shouldShowSearch ? handleOnSearch : undefined}
         onSelect={handleOnSelect}
