@@ -16,7 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   QueryFormData,
   SuperChart,
@@ -29,7 +35,7 @@ import {
   getChartMetadataRegistry,
 } from '@superset-ui/core';
 import { useDispatch, useSelector } from 'react-redux';
-import { areObjectsEqual } from 'src/reduxUtils';
+import { isEqual, isEqualWith } from 'lodash';
 import { getChartDataRequest } from 'src/chart/chartAction';
 import Loading from 'src/components/Loading';
 import BasicErrorAlert from 'src/components/ErrorMessage/BasicErrorAlert';
@@ -52,6 +58,9 @@ const StyledDiv = styled.div`
     min-height: ${HEIGHT}px;
   }
 `;
+
+const queriesDataPlaceholder = [{ data: [{}] }];
+const behaviors = [Behavior.NATIVE_FILTER];
 
 const FilterValue: React.FC<FilterProps> = ({
   dataMaskSelected,
@@ -105,10 +114,17 @@ const FilterValue: React.FC<FilterProps> = ({
       time_range,
     });
     const filterOwnState = filter.dataMask?.ownState || {};
+    // TODO: We should try to improve our useEffect hooks to depend more on
+    // granular information instead of big objects that require deep comparison.
+    const customizer = (
+      objValue: Partial<QueryFormData>,
+      othValue: Partial<QueryFormData>,
+      key: string,
+    ) => (key === 'url_params' ? true : undefined);
     if (
       !isRefreshing &&
-      (!areObjectsEqual(formData, newFormData) ||
-        !areObjectsEqual(ownState, filterOwnState) ||
+      (!isEqualWith(formData, newFormData, customizer) ||
+        !isEqual(ownState, filterOwnState) ||
         isDashboardRefreshing)
     ) {
       setFormData(newFormData);
@@ -186,11 +202,36 @@ const FilterValue: React.FC<FilterProps> = ({
     return undefined;
   }, [inputRef, directPathToChild, filter.id]);
 
-  const setDataMask = (dataMask: DataMask) =>
-    onFilterSelectionChange(filter, dataMask);
+  const setDataMask = useCallback(
+    (dataMask: DataMask) => onFilterSelectionChange(filter, dataMask),
+    [filter, onFilterSelectionChange],
+  );
 
-  const setFocusedFilter = () => dispatchFocusAction(dispatch, id);
-  const unsetFocusedFilter = () => dispatchFocusAction(dispatch);
+  const setFocusedFilter = useCallback(
+    () => dispatchFocusAction(dispatch, id),
+    [dispatch, id],
+  );
+  const unsetFocusedFilter = useCallback(() => dispatchFocusAction(dispatch), [
+    dispatch,
+  ]);
+
+  const hooks = useMemo(
+    () => ({ setDataMask, setFocusedFilter, unsetFocusedFilter }),
+    [setDataMask, setFocusedFilter, unsetFocusedFilter],
+  );
+
+  const isMissingRequiredValue = checkIsMissingRequiredValue(
+    filter,
+    filter.dataMask?.filterState,
+  );
+
+  const filterState = useMemo(
+    () => ({
+      ...filter.dataMask?.filterState,
+      validateStatus: isMissingRequiredValue && 'error',
+    }),
+    [filter.dataMask?.filterState, isMissingRequiredValue],
+  );
 
   if (error) {
     return (
@@ -201,14 +242,6 @@ const FilterValue: React.FC<FilterProps> = ({
       />
     );
   }
-  const isMissingRequiredValue = checkIsMissingRequiredValue(
-    filter,
-    filter.dataMask?.filterState,
-  );
-  const filterState = {
-    ...filter.dataMask?.filterState,
-    validateStatus: isMissingRequiredValue && 'error',
-  };
 
   return (
     <StyledDiv data-test="form-item-value">
@@ -220,18 +253,17 @@ const FilterValue: React.FC<FilterProps> = ({
           width="100%"
           formData={formData}
           // For charts that don't have datasource we need workaround for empty placeholder
-          queriesData={hasDataSource ? state : [{ data: [{}] }]}
+          queriesData={hasDataSource ? state : queriesDataPlaceholder}
           chartType={filterType}
-          behaviors={[Behavior.NATIVE_FILTER]}
+          behaviors={behaviors}
           filterState={filterState}
           ownState={filter.dataMask?.ownState}
           enableNoResults={metadata?.enableNoResults}
           isRefreshing={isRefreshing}
-          hooks={{ setDataMask, setFocusedFilter, unsetFocusedFilter }}
+          hooks={hooks}
         />
       )}
     </StyledDiv>
   );
 };
-
 export default FilterValue;
