@@ -24,6 +24,7 @@ import {
   ensureIsArray,
   ExtraFormData,
   GenericDataType,
+  getColumnLabel,
   JsonObject,
   smartDateDetailedFormatter,
   t,
@@ -82,6 +83,8 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
     setFocusedFilter,
     unsetFocusedFilter,
     appSection,
+    showOverflow,
+    parentRef,
   } = props;
   const {
     enableEmptyFilter,
@@ -92,7 +95,10 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
     defaultToFirstItem,
     searchAllOptions,
   } = formData;
-  const groupby = ensureIsArray<string>(formData.groupby);
+  const groupby = useMemo(
+    () => ensureIsArray(formData.groupby).map(getColumnLabel),
+    [formData.groupby],
+  );
   const [col] = groupby;
   const [initialColtypeMap] = useState(coltypeMap);
   const [dataMask, dispatchDataMask] = useImmerReducer(reducer, {
@@ -285,6 +291,9 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
           // @ts-ignore
           value={filterState.value || []}
           disabled={isDisabled}
+          getPopupContainer={
+            showOverflow ? () => parentRef?.current : undefined
+          }
           showSearch={showSearch}
           mode={multiSelect ? 'multiple' : 'single'}
           placeholder={placeholderText}

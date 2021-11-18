@@ -237,12 +237,12 @@ function dbReducer(
           },
         };
       }
-      if (action.payload.name === 'schemas_allowed_for_csv_upload') {
+      if (action.payload.name === 'schemas_allowed_for_file_upload') {
         return {
           ...trimmedState,
           extra_json: {
             ...trimmedState.extra_json,
-            schemas_allowed_for_csv_upload: (action.payload.value || '').split(
+            schemas_allowed_for_file_upload: (action.payload.value || '').split(
               ',',
             ),
           },
@@ -346,8 +346,8 @@ function dbReducer(
           ...JSON.parse(action.payload.extra || ''),
           metadata_params: JSON.stringify(extra_json?.metadata_params),
           engine_params: JSON.stringify(extra_json?.engine_params),
-          schemas_allowed_for_csv_upload:
-            extra_json?.schemas_allowed_for_csv_upload,
+          schemas_allowed_for_file_upload:
+            extra_json?.schemas_allowed_for_file_upload,
         };
       }
 
@@ -410,10 +410,10 @@ const serializeExtra = (extraJson: DatabaseObject['extra_json']) =>
     ...extraJson,
     metadata_params: JSON.parse((extraJson?.metadata_params as string) || '{}'),
     engine_params: JSON.parse(
-      ((extraJson?.engine_params as unknown) as string) || '{}',
+      (extraJson?.engine_params as unknown as string) || '{}',
     ),
-    schemas_allowed_for_csv_upload: (
-      extraJson?.schemas_allowed_for_csv_upload || []
+    schemas_allowed_for_file_upload: (
+      extraJson?.schemas_allowed_for_file_upload || []
     ).filter(schema => schema !== ''),
   });
 
@@ -430,11 +430,8 @@ const DatabaseModal: FunctionComponent<DatabaseModalProps> = ({
   >(dbReducer, null);
   const [tabKey, setTabKey] = useState<string>(DEFAULT_TAB_KEY);
   const [availableDbs, getAvailableDbs] = useAvailableDatabases();
-  const [
-    validationErrors,
-    getValidation,
-    setValidationErrors,
-  ] = useDatabaseValidation();
+  const [validationErrors, getValidation, setValidationErrors] =
+    useDatabaseValidation();
   const [hasConnectedDb, setHasConnectedDb] = useState<boolean>(false);
   const [dbName, setDbName] = useState('');
   const [editNewDb, setEditNewDb] = useState<boolean>(false);
