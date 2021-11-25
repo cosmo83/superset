@@ -24,39 +24,48 @@ import {
   getTimeFormatterRegistry,
   smartDateFormatter,
   smartDateVerboseFormatter,
-  NumberFormatter
+  NumberFormatter,
 } from '@superset-ui/core';
 
-let changeNumberFormat = function (val: number, currency?: boolean, decimals?: number, recursiveCall?: boolean): string {
-    const decimalPoints: number = decimals || 2;
-    const isNegative: boolean = (val < 0 ? true : false);
-    var num = Math.abs(val);
-    const noOfLakhs: number = num / 100000;
-    let displayStr: string;
-    let isPlural: boolean;
-    let roundOf = function (num: number): number {
-          return  parseFloat(num.toFixed(decimalPoints));
-   }
+const changeNumberFormat = function (
+  val: number,
+  currency?: boolean,
+  decimals?: number,
+  recursiveCall?: boolean,
+): string {
+  const decimalPoints: number = decimals || 2;
+  const isNegative: boolean = val < 0;
+  const num = Math.abs(val);
+  const noOfLakhs: number = num / 100000;
+  let displayStr: string;
+  let isPlural: boolean;
+  const roundOf = function (num: number): number {
+    return parseFloat(num.toFixed(decimalPoints));
+  };
 
-    if (noOfLakhs >= 1 && noOfLakhs <= 99) {
-        const lakhs: number = roundOf(noOfLakhs);
-        isPlural = lakhs > 1 && !recursiveCall;
-        displayStr = `${lakhs} Lac${isPlural ? 's' : ''}`;
-    } else if (noOfLakhs >= 100) {
-        const crores = roundOf(noOfLakhs / 100);
-        const crorePrefix = crores >= 100000 ? changeNumberFormat(crores, currency, decimals, true) : crores;
-        isPlural = crores > 1 && !recursiveCall;
-        displayStr = `${currency ? '₹ ' : ''}${crorePrefix} Cr${isPlural ? 's' : ''}`;
-    } else {
-        displayStr = roundOf(+num).toString();
-    }
+  if (noOfLakhs >= 1 && noOfLakhs <= 99) {
+    const lakhs: number = roundOf(noOfLakhs);
+    isPlural = lakhs > 1 && !recursiveCall;
+    displayStr = `${lakhs} Lac${isPlural ? 's' : ''}`;
+  } else if (noOfLakhs >= 100) {
+    const crores = roundOf(noOfLakhs / 100);
+    const crorePrefix =
+      crores >= 100000
+        ? changeNumberFormat(crores, currency, decimals, true)
+        : crores;
+    isPlural = crores > 1 && !recursiveCall;
+    displayStr = `${currency ? '₹ ' : ''}${crorePrefix} Cr${
+      isPlural ? 's' : ''
+    }`;
+  } else {
+    displayStr = roundOf(+num).toString();
+  }
 
-    if(isNegative){
-      return "-" + displayStr;
-    }
-    return displayStr;
-}
-
+  if (isNegative) {
+    return '-'.concat(displayStr);
+  }
+  return displayStr;
+};
 
 export default function setupFormatters() {
   getNumberFormatterRegistry()
@@ -99,15 +108,22 @@ export default function setupFormatters() {
       'DURATION_SUB',
       createDurationFormatter({ formatSubMilliseconds: true }),
     )
-   .registerValue("NUMBER_INDIA", new NumberFormatter({
-       'id': 'NUMBER_INDIA',
-       formatFunc: v =>  changeNumberFormat(v)
-    }))
-   .registerValue("CURRENCY_INDIA", new NumberFormatter({
-       'id': 'CURRENCY_INDIA',
-       formatFunc: v =>  changeNumberFormat(v,true)
-    }));
-         
+    .registerValue(
+      'NUMBER_INDIA',
+      new NumberFormatter({
+        id: 'NUMBER_INDIA',
+        label: 'Indian Number',
+        formatFunc: v => changeNumberFormat(v),
+      }),
+    )
+    .registerValue(
+      'CURRENCY_INDIA',
+      new NumberFormatter({
+        id: 'CURRENCY_INDIA',
+        label: 'Indian Currency',
+        formatFunc: v => changeNumberFormat(v, true),
+      }),
+    );
 
   getTimeFormatterRegistry()
     .registerValue('smart_date', smartDateFormatter)
