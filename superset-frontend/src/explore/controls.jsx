@@ -88,7 +88,6 @@ export const D3_FORMAT_OPTIONS = [
   ['$,.2f', '$,.2f (12345.432 => $12,345.43)'],
   ['DURATION', 'Duration in ms (66000 => 1m 6s)'],
   ['DURATION_SUB', 'Duration in ms (100.40008 => 100ms 400µs 80ns)'],
-  ['CURRENCY_INDIA','Indian Currency'],
 ];
 
 const ROW_LIMIT_OPTIONS = [10, 50, 100, 250, 500, 1000, 5000, 10000, 50000];
