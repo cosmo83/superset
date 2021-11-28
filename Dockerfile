@@ -155,12 +155,12 @@ USER superset
 ######################################################################
 # CI image...
 ######################################################################
-FROM lean AS ci
+#FROM lean AS ci
 
-COPY --chown=superset ./docker/docker-bootstrap.sh /app/docker/
-COPY --chown=superset ./docker/docker-init.sh /app/docker/
-COPY --chown=superset ./docker/docker-ci.sh /app/docker/
+#COPY --chown=superset ./docker/docker-bootstrap.sh /app/docker/
+#COPY --chown=superset ./docker/docker-init.sh /app/docker/
+#COPY --chown=superset ./docker/docker-ci.sh /app/docker/
 
-RUN chmod a+x /app/docker/*.sh
+#RUN chmod a+x /app/docker/*.sh
 
-CMD /app/docker/docker-ci.sh
+#CMD /app/docker/docker-ci.sh
